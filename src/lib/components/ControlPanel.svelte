@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { projectList, modelList, internet, agentState } from "$lib/store";
   import { createProject, fetchProjectList, getTokenUsage } from "$lib/api";
+  import { API_BASE_URL } from "$lib/api";
 
   let selectedProject;
   let selectedModel;
@@ -158,7 +159,7 @@
       </button>
     {:else}
       <a
-        href={`http://127.0.0.1:1337/api/download-project?project_name=${selectedProject}`}
+        href={`${API_BASE_URL}/api/download-project?project_name=${selectedProject}`}
         class="inline-flex justify-center w-full gap-x-1.5 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-indigo-700 hover:bg-slate-800"
       >
         Download Project
