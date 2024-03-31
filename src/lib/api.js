@@ -6,7 +6,7 @@ import {
   internet,
 } from "./store";
 
-export const API_BASE_URL = "https://devin3.azurewebsites.net/";
+export const API_BASE_URL = "https://devin3.azurewebsites.net";
 
 export async function fetchProjectList() {
   const response = await fetch(`${API_BASE_URL}/api/project-list`);
