@@ -66,7 +66,8 @@
       <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
       <div class="w-3 h-3 bg-green-500 rounded-full"></div>
     </div>
-    <span id="terminal-title">Terminal</span>
+    <span id="terminal-title">Terminal</span> 
+
   </div>
   <div
     id="terminal-content"

@@ -1,6 +1,6 @@
 <script>
-  import { onMount } from 'svelte';
-  import { projectList, modelList, internet } from "$lib/store";
+  import { onMount } from "svelte";
+  import { projectList, modelList, internet, agentState } from "$lib/store";
   import { createProject, fetchProjectList, getTokenUsage } from "$lib/api";
 
   let selectedProject;
@@ -50,11 +50,21 @@
       modelDropdown.classList.add("hidden");
     }
   }
-
+  let agentCompleted = false;
+  function handleUncompletedAgent() {
+    alert("Please wait for the agent to complete the task.");
+  }
   onMount(() => {
     setInterval(updateTokenUsage, 1000);
-
-    selectedProject = localStorage.getItem("selectedProject") || "Select Project";
+    agentState.subscribe((state) => {
+      if (state) {
+        agentCompleted = state.completed? "Completed" : "working on it...";
+      }else{
+        agentCompleted = "Sleeping";
+      }
+    });
+    selectedProject =
+      localStorage.getItem("selectedProject") || "Select Project";
     selectedModel = localStorage.getItem("selectedModel") || "Select Model";
 
     document
@@ -80,66 +90,110 @@
 </script>
 
 <div class="control-panel bg-slate-900 border border-indigo-700 rounded">
-  <div class="dropdown-menu relative inline-block">
-    <button
-      type="button"
-      class="inline-flex justify-center w-full gap-x-1.5 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-indigo-700 hover:bg-slate-800"
-      id="project-button"
-      aria-expanded="true"
-      aria-haspopup="true"
-    >
-      <span id="selected-project">{selectedProject}</span>
-      <svg
-        class="-mr-1 h-5 w-5 text-gray-400"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        aria-hidden="true"
+  <div class="inline-flex gap-1.5">
+    <div class="dropdown-menu relative inline-block">
+      <button
+        type="button"
+        class="inline-flex justify-center gap-x-1.5 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-indigo-700 hover:bg-slate-800"
+        id="project-button"
+        style="min-width: 150px;"
+        aria-expanded="true"
+        aria-haspopup="true"
       >
-        <path
-          fill-rule="evenodd"
-          d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-          clip-rule="evenodd"
-        />
-      </svg>
-    </button>
-    <div
-      id="project-dropdown"
-      class="absolute left-0 z-10 mt-2 w-full origin-top-left rounded-md bg-slate-800 shadow-lg ring-1 ring-indigo-700 ring-opacity-5 focus:outline-none hidden"
-      role="menu"
-      aria-orientation="vertical"
-      aria-labelledby="project-button"
-      tabindex="-1"
-    >
-      <div class="py-1" role="none">
-        <a
-          href="#"
-          class="text-white block px-4 py-2 text-sm hover:bg-slate-700"
-          on:click|preventDefault={createNewProject}
+        <span id="selected-project">{selectedProject}</span>
+        <svg
+          class="-mr-1 h-5 w-5 text-gray-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
         >
-          + Create new project
-        </a>
-        {#if $projectList !== null}
-          {#each $projectList as project}
-            <a
-              href="#"
-              class="text-white block px-4 py-2 text-sm hover:bg-slate-700"
-              on:click|preventDefault={() => selectProject(project)}
-            >
-              {project}
-            </a>
-          {/each}
-        {/if}
+          <path
+            fill-rule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+      <div
+        id="project-dropdown"
+        class="absolute left-0 z-10 mt-2 w-full origin-top-left rounded-md bg-slate-800 shadow-lg ring-1 ring-indigo-700 ring-opacity-5 focus:outline-none hidden"
+        role="menu"
+        style="overflow: scroll;
+        max-height: 450px;
+        width: auto;
+        max-width: 250px;
+        "
+        aria-orientation="vertical"
+        aria-labelledby="project-button"
+        tabindex="-1"
+      >
+        <div class="py-1" role="none">
+          <a
+            href="#"
+            class="text-white block px-4 py-2 text-sm hover:bg-slate-700"
+            on:click|preventDefault={createNewProject}
+          >
+            + Create new project
+          </a>
+          {#if $projectList !== null}
+            {#each $projectList as project}
+              <a
+                href="#"
+                class="text-white block px-4 py-2 text-sm hover:bg-slate-700"
+                on:click|preventDefault={() => selectProject(project)}
+              >
+                {project}
+              </a>
+            {/each}
+          {/if}
+        </div>
       </div>
     </div>
+    {#if agentCompleted!="Completed"}
+      <button
+        on:click={handleUncompletedAgent}
+        class="inline-flex justify-center w-full gap-x-1.5 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-indigo-700 hover:bg-slate-800"
+      >
+        Download Project
+      </button>
+    {:else}
+      <a
+        href={`http://127.0.0.1:1337/api/download-project?project_name=${selectedProject}`}
+        class="inline-flex justify-center w-full gap-x-1.5 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-indigo-700 hover:bg-slate-800"
+      >
+        Download Project
+      </a>
+    {/if}
   </div>
 
   <div
     class="right-controls"
     style="display: flex; align-items: center; gap: 20px"
   >
+    <div
+      class="flex items-center space-x-2"
+      style={selectedProject != "Select Project"
+        ? "display:block"
+        : "display:none"}
+    >
+      <span
+        >Project Status: <span
+          style={agentCompleted === "Completed"
+            ? "color: green;"
+            : agentCompleted === "working on it..."
+              ? "color: red;"
+              : "color: blue;"}>{agentCompleted}</span
+        ></span
+      >
+    </div>
     <div class="flex items-center space-x-2">
       <span>Internet:</span>
-      <div id="internet-status" class="internet-status" class:online={$internet} class:offline={!$internet}></div>
+      <div
+        id="internet-status"
+        class="internet-status"
+        class:online={$internet}
+        class:offline={!$internet}
+      ></div>
       <span id="internet-status-text"></span>
     </div>
     <div class="flex items-center space-x-2">
